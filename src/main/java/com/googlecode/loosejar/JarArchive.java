@@ -101,7 +101,8 @@ public class JarArchive {
         Enumeration<JarEntry> entries;
         try {
             entries = new JarFile(archive).entries();
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             throw new RuntimeException("Failed to read entries from a jar archive [" + archive + "]: " + e);
         }
 

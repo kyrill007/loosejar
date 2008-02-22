@@ -17,7 +17,6 @@
 package com.googlecode.loosejar;
 
 import java.lang.instrument.Instrumentation;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -51,10 +50,10 @@ public class JVMAnalyzer implements Runnable {
      * Performs <em>all</em> application logic returning the results of the analysis.
      */
     public String displayResults() {
-        Map<URLClassLoader, List<String>> classLoaderMap = createURLClassLoaderMap();
+        Map<ClassLoader, List<String>> classLoaderMap = createClassLoaderMap();
 
         StringBuilder sb = new StringBuilder();
-        for (URLClassLoader ucl : classLoaderMap.keySet()) {
+        for (ClassLoader ucl : classLoaderMap.keySet()) {
             ClassLoaderAnalyzer cli = new ClassLoaderAnalyzer(ucl, classLoaderMap.get(ucl));
             cli.analyze();
             sb.append(cli.summary());
@@ -65,29 +64,28 @@ public class JVMAnalyzer implements Runnable {
         return results;
     }
 
-    private Map<URLClassLoader, List<String>> createURLClassLoaderMap() {
-        Map<URLClassLoader, List<String>> map = new HashMap<URLClassLoader, List<String>>();
-
+    private Map<ClassLoader, List<String>> createClassLoaderMap() {
+        Map<ClassLoader, List<String>> map = new HashMap<ClassLoader, List<String>>();
 
         Class<?>[] loadedClasses = instrumentation.getAllLoadedClasses();
         log(String.format("Found %d classes loaded in the JVM.", loadedClasses.length));
 
         for (Class<?> c : loadedClasses) {
             ClassLoader cl = c.getClassLoader();
+            if (cl == null) continue;  //we don't need Bootstrap classloader if it is represented as null
 
-            if (cl instanceof URLClassLoader) {
-                URLClassLoader ucl = (URLClassLoader) cl;
-                if (map.containsKey(ucl)) {
-                    map.get(ucl).add(c.getName());
-                } else {
-                    List<String> classNames = new ArrayList<String>();
-                    classNames.add(c.getName());
-                    map.put(ucl, classNames);
-                }
+            if (map.containsKey(cl)) {
+                map.get(cl).add(c.getName());
+            }
+            else {
+                List<String> classNames = new ArrayList<String>();
+                classNames.add(c.getName());
+                map.put(cl, classNames);
+                log("Found classloader: " + cl); //TODO remove
             }
         }
 
-        log(String.format("Found %d URLClassLoader(s).", map.size()));
+        log(String.format("Found %d various ClassLoader(s) inside the JVM.", map.size()));
         return map;
     }
 
