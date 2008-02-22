@@ -93,7 +93,8 @@ public final class CollectionUtils {
             Integer c = count.get(obj);
             if (c == null) {
                 count.put(obj, INTEGER_ONE);
-            } else {
+            }
+            else {
                 count.put(obj, c + 1);
             }
         }

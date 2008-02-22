@@ -17,13 +17,15 @@
 package com.googlecode.loosejar;
 
 import java.io.File;
-import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -31,6 +33,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import static com.googlecode.loosejar.Constants.*;
+import static com.googlecode.loosejar.Logger.*;
 import com.googlecode.loosejar.org.apache.commons.collections15.CollectionUtils;
 
 /**
@@ -45,10 +48,10 @@ import com.googlecode.loosejar.org.apache.commons.collections15.CollectionUtils;
  */
 public class ClassLoaderAnalyzer {
     private static final URL JAVA_HOME = javaHome();
-    private static final String MANIFEST_URL_PREFIX = "jar:";
-    private static final String MANIFEST_URL_SUFFIX = "!/META-INF/MANIFEST.MF";
+    private static final int MANIFEST_PREFIX_LENGTH = "jar:".length();
+    private static final int MANIFEST_SUFFIX_LENGTH = "!/META-INF/MANIFEST.MF".length();
 
-    private final URLClassLoader classLoader;
+    private final ClassLoader classLoader;
     private final List<String> classLoaderClasses;
 
     private final List<JarArchive> jars = new ArrayList<JarArchive>();
@@ -59,7 +62,7 @@ public class ClassLoaderAnalyzer {
      * @param classLoader        the classloader to be analyzed
      * @param classLoaderClasses the classes that this classloaded has loaded
      */
-    public ClassLoaderAnalyzer(URLClassLoader classLoader, List<String> classLoaderClasses) {
+    public ClassLoaderAnalyzer(ClassLoader classLoader, List<String> classLoaderClasses) {
         this.classLoader = classLoader;
         this.classLoaderClasses = classLoaderClasses;
         this.jars.addAll(findAllJars());
@@ -68,24 +71,17 @@ public class ClassLoaderAnalyzer {
     private List<JarArchive> findAllJars() {
         List<JarArchive> list = new ArrayList<JarArchive>();
 
-        Enumeration<URL> urls;
-        try {
-            // This will return a transitive closure of all jars on the classpath
-            // in the form of
-            // jar:file:/foo/bar/baz.jar!/META-INF/MANIFEST.MF
-            urls = classLoader.findResources("META-INF/MANIFEST.MF");
-        } catch (IOException e) {
-            //presumably it should never happen
-            throw new RuntimeException(e);
-        }
+        Enumeration<URL> urls = findManifestResources();
+        if (urls == null) return list;
 
         while (urls.hasMoreElements()) {
             String rawUrl = urls.nextElement().toString();
+            log("RAW URL is: " + rawUrl); //TODO Remove
+
+            if (!rawUrl.startsWith("jar:")) continue;
 
             //convert into a normal URI
-            int start = MANIFEST_URL_PREFIX.length();
-            int end = rawUrl.length() - MANIFEST_URL_SUFFIX.length();
-            String uriStr = rawUrl.substring(start, end);
+            String uriStr = rawUrl.substring(MANIFEST_PREFIX_LENGTH, rawUrl.length() - MANIFEST_SUFFIX_LENGTH);
 
             //we don't want to examine JDK jars;
             //ignore own loosejar.jar as well
@@ -93,11 +89,14 @@ public class ClassLoaderAnalyzer {
                 continue;
             }
 
-            URI uri = null;
+            uriStr = uriStr.replaceAll("\\s", "%20"); //escape spaces
+
+            URI uri;
             try {
                 uri = new URI(uriStr);
-            } catch (URISyntaxException e) {
-                new RuntimeException(e);
+            }
+            catch (URISyntaxException e) {
+                throw new RuntimeException(e);
             }
 
             File jar = new File(uri);
@@ -133,23 +132,18 @@ public class ClassLoaderAnalyzer {
      * Display the analysis summary.
      */
     public String summary() {
-        StringBuilder sb = new StringBuilder();
+        if (jars.isEmpty()) return "";
 
-        sb.append("Summary for [" + classLoader.getClass().getName() + "] classloader:\n\n");
+        StringBuilder buf = new StringBuilder();
+        buf.append("Summary for [" + classLoader.getClass().getName() + "] classloader:\n\n");
         for (JarArchive jar : jars) {
-            sb.append("    ");
-            sb.append("Jar: " + jar.getJar() + '\n');
-            sb.append("    ");
-            sb.append(String.format("Utilization: %.2f%% - loaded %d of %d classes.\n\n",
+            buf.append("    ");
+            buf.append("Jar: " + jar.getJar() + '\n');
+            buf.append("    ");
+            buf.append(String.format("Utilization: %.2f%% - loaded %d of %d classes.\n\n",
                     jar.getUsagePercentage(), jar.getNamesOfLoadedClasses().size(), jar.getAllClassNames().size()));
         }
-
-        if (jars.isEmpty()) {
-            sb.append("    ");
-            sb.append("No third-party jars detected on this classloader's classpath.\n\n");
-        }
-
-        return sb.toString();
+        return buf.toString();
     }
 
     private static URL javaHome() {
@@ -166,10 +160,52 @@ public class ClassLoaderAnalyzer {
 
         try {
             return jHome.toURI().toURL();
-        } catch (MalformedURLException e) {
+        }
+        catch (MalformedURLException e) {
             //this shouldn't happen; the value of java.home system property should be always parseable.
             throw new RuntimeException(e);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Enumeration<URL> findManifestResources() {
+        //invoke #findResource(String) method reflectively as it is protected in java.lang.ClassLoader
+        try {
+            Method method = findMethod(classLoader.getClass(), "findResources", new Class<?>[]{String.class});
+
+            //attempt to disable security check for non-public methods.
+            if (!Modifier.isPublic(method.getModifiers()) && !method.isAccessible()) {
+                method.setAccessible(true);
+            }
+
+            // This will return a transitive closure of all jars on the classpath
+            // in the form of
+            // jar:file:/foo/bar/baz.jar!/META-INF/MANIFEST.MF
+            return (Enumeration<URL>) method.invoke(classLoader, "META-INF/MANIFEST.MF");
+
+        }
+        catch (IllegalAccessException e) {
+            log("Failed to invoke #findResources(String) method on classloader [" + classLoader + "].");
+            throw new RuntimeException(e);
+        }
+        catch (InvocationTargetException e) {
+            log("Failed to invoke #findResources(String) method on classloader [" + classLoader + "].");
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Method findMethod(Class<?> clazz, String name, Class<?>[] paramTypes) {
+        Class<?> type = clazz;
+        while (!Object.class.equals(type) && type != null) {
+            Method[] methods = type.getDeclaredMethods();
+            for (Method method : methods) {
+                if (name.equals(method.getName()) && Arrays.equals(paramTypes, method.getParameterTypes())) {
+                    return method;
+                }
+            }
+            type = type.getSuperclass();
+        }
+        return null;
     }
 }
 
