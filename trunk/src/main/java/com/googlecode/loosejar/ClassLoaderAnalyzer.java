@@ -76,7 +76,6 @@ public class ClassLoaderAnalyzer {
 
         while (urls.hasMoreElements()) {
             String rawUrl = urls.nextElement().toString();
-            log("RAW URL is: " + rawUrl); //TODO Remove
 
             if (!rawUrl.startsWith("jar:")) continue;
 
@@ -96,7 +95,7 @@ public class ClassLoaderAnalyzer {
                 uri = new URI(uriStr);
             }
             catch (URISyntaxException e) {
-                throw new RuntimeException(e);
+                continue;
             }
 
             File jar = new File(uri);
