@@ -81,7 +81,6 @@ public class JVMAnalyzer implements Runnable {
                 List<String> classNames = new ArrayList<String>();
                 classNames.add(c.getName());
                 map.put(cl, classNames);
-                log("Found classloader: " + cl); //TODO remove
             }
         }
 
