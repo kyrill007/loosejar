@@ -22,7 +22,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -90,15 +89,16 @@ public class ClassLoaderAnalyzer {
 
             uriStr = uriStr.replaceAll("\\s", "%20"); //escape spaces
 
-            URI uri;
+            File jar;
             try {
-                uri = new URI(uriStr);
+                URI uri = new URI(uriStr);
+                jar = new File(uri);
             }
-            catch (URISyntaxException e) {
+            catch (Exception e) {
+                log("IGNORED: [" + uriStr + "]. Bad URI syntax.");
                 continue;
             }
 
-            File jar = new File(uri);
             // just real jars are needed,
             // directories and incorrectly specified classpath entries are not needed.
             if (jar.isFile()) {
