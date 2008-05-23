@@ -89,6 +89,13 @@ public class ClassLoaderAnalyzer {
 
             uriStr = uriStr.replaceAll("\\s", "%20"); //escape spaces
 
+            // this is a workaround for a common bug in some classloader implementations,
+            // which often return URIs in the following format [file:c:/location/...]
+            // the point is that 'file:' must be followed by '/' to be a valid URI.
+            if (uriStr.startsWith("file:") && !uriStr.startsWith("file:/")) {
+                uriStr = "file:/" + uriStr.substring("file:".length());
+            }
+
             File jar;
             try {
                 URI uri = new URI(uriStr);
@@ -99,7 +106,7 @@ public class ClassLoaderAnalyzer {
                 continue;
             }
 
-            // just real jars are needed,
+            // just real jars are needed;
             // directories and incorrectly specified classpath entries are not needed.
             if (jar.isFile()) {
                 list.add(new JarArchive(jar));
