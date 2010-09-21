@@ -16,6 +16,8 @@
 
 package com.googlecode.loosejar;
 
+import com.googlecode.loosejar.org.apache.commons.collections15.CollectionUtils;
+
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -23,17 +25,10 @@ import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
-import static com.googlecode.loosejar.Constants.*;
-import static com.googlecode.loosejar.Logger.*;
-import com.googlecode.loosejar.org.apache.commons.collections15.CollectionUtils;
+import static com.googlecode.loosejar.Constants.PROJECT_NAME;
+import static com.googlecode.loosejar.Logger.log;
 
 /**
  * The purpose of this class is to:
@@ -191,13 +186,14 @@ public class ClassLoaderAnalyzer {
 
         }
         catch (IllegalAccessException e) {
-            log("Failed to invoke #findResources(String) method on classloader [" + classLoader + "].");
-            throw new RuntimeException(e);
+            log("Failed to invoke #findResources(String) method on classloader [" + classLoader + "]. " +
+                    "No access permissions.");
         }
         catch (InvocationTargetException e) {
-            log("Failed to invoke #findResources(String) method on classloader [" + classLoader + "].");
-            throw new RuntimeException(e);
+            log("Failed to invoke #findResources(String) method on classloader [" + classLoader + "]. " +
+                    "The classloader is likely no longer available.");
         }
+        return null;
     }
 
     private Method findMethod(Class<?> clazz, String name, Class<?>[] paramTypes) {
