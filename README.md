@@ -1,6 +1,6 @@
 Description
 ===========
-***loosejar*** is a simple *Java Agent* that can be used to discover unnecessary jars lying on application classpath. It performs per classloader JVM heap analysis and displays its results. loosejar can be safely used during development, QA, UAT or even in production as it doesn't modify the state of the JVM at all and adds no overhead.
+**loosejar** is a simple *Java Agent* that can be used to discover unnecessary jars lying on application classpath. It performs per classloader JVM heap analysis and displays its results. loosejar can be safely used during development, QA, UAT or even in production as it doesn't modify the state of the JVM at all and adds no overhead.
 
 The usage is very simple:
 
@@ -10,10 +10,10 @@ The usage is very simple:
 
 loosejar can only be used on Java 1.5 or higher JVMs.
 
-loosejar ***1.0.1*** has been released!
+RELEASES
+--------
+loosejar **1.0.1** has been released!
 
 Mentions
 --------
-    Eamonn McManus?'s Blog
-        [http://weblogs.java.net/blog/emcmanus/archive/2008/02/do_i_really_nee.html] 
-        
+    [Eamonn McManus's Blog](http://weblogs.java.net/blog/emcmanus/archive/2008/02/do_i_really_nee.html)
