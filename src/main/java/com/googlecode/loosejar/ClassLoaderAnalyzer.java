@@ -131,6 +131,7 @@ public class ClassLoaderAnalyzer {
 
     /**
      * Display the analysis summary.
+     * @deprecated
      */
     public String summary() {
         if (jars.isEmpty()) return "";

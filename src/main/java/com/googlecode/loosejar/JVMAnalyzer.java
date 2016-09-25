@@ -16,77 +16,104 @@
 
 package com.googlecode.loosejar;
 
+import static com.googlecode.loosejar.Logger.log;
+
+import java.io.IOException;
+import java.io.PrintStream;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.googlecode.loosejar.Logger.*;
-
+import com.googlecode.loosejar.output.Summarizer;
+import com.googlecode.loosejar.output.SummarizerFactory;
 
 /**
- * This class represents the logical point of entry into the application. It analyzes the JVM
- * state and creates a map of classloaders to their loaded classes. The {@link #displayResults} method
- * delegates further processing of individual classloader data to the {@link ClassLoaderAnalyzer} class.
+ * This class represents the logical point of entry into the application. It
+ * analyzes the JVM state and creates a map of classloaders to their loaded
+ * classes. The {@link #displayResults} method delegates further processing of
+ * individual classloader data to the {@link ClassLoaderAnalyzer} class.
  *
  * @author Kyrill Alyoshin
  */
 public class JVMAnalyzer implements Runnable {
-    private final Instrumentation instrumentation;
+	private final Instrumentation instrumentation;
 
-    public JVMAnalyzer(Instrumentation instr) {
-        this.instrumentation = instr;
-    }
+	public JVMAnalyzer(Instrumentation instr) {
+		this.instrumentation = instr;
+	}
 
-    /**
-     * Simply invokes {@link #displayResults()}.
-     */
-    public void run() {
-        displayResults();
-    }
+	/**
+	 * Simply invokes {@link #displayResults()}.
+	 */
+	public void run() {
+		displayResults();
+	}
 
-    /**
-     * Performs <em>all</em> application logic returning the results of the analysis.
-     */
-    public String displayResults() {
-        Map<ClassLoader, List<String>> classLoaderMap = createClassLoaderMap();
+	/**
+	 * Performs <em>all</em> application logic returning the results of the
+	 * analysis.
+	 */
+	public void displayResults() {
+		String outputFile = System.getProperty("loosejar.outputFile");
+		String results = getResults();
+		if (outputFile == null || outputFile.equals("")) {
+			writeToConsole(results);
+		} else {
+			writeToFile(outputFile, results);
+		}
 
-        StringBuilder sb = new StringBuilder();
-        for (ClassLoader ucl : classLoaderMap.keySet()) {
-            ClassLoaderAnalyzer cli = new ClassLoaderAnalyzer(ucl, classLoaderMap.get(ucl));
-            cli.analyze();
-            sb.append(cli.summary());
-        }
+	}
 
-        String results = sb.toString();
-        log(results);
-        return results;
-    }
+	private Map<ClassLoader, List<String>> createClassLoaderMap() {
+		Map<ClassLoader, List<String>> map = new HashMap<ClassLoader, List<String>>();
 
-    private Map<ClassLoader, List<String>> createClassLoaderMap() {
-        Map<ClassLoader, List<String>> map = new HashMap<ClassLoader, List<String>>();
+		Class<?>[] loadedClasses = instrumentation.getAllLoadedClasses();
+		log(String.format("Found %d classes loaded in the JVM.", loadedClasses.length));
 
-        Class<?>[] loadedClasses = instrumentation.getAllLoadedClasses();
-        log(String.format("Found %d classes loaded in the JVM.", loadedClasses.length));
+		for (Class<?> c : loadedClasses) {
+			ClassLoader cl = c.getClassLoader();
+			if (cl == null)
+				continue; // we don't need Bootstrap classloader if it is
+							// represented as null
 
-        for (Class<?> c : loadedClasses) {
-            ClassLoader cl = c.getClassLoader();
-            if (cl == null) continue;  //we don't need Bootstrap classloader if it is represented as null
+			if (map.containsKey(cl)) {
+				map.get(cl).add(c.getName());
+			} else {
+				List<String> classNames = new ArrayList<String>();
+				classNames.add(c.getName());
+				map.put(cl, classNames);
+			}
+		}
 
-            if (map.containsKey(cl)) {
-                map.get(cl).add(c.getName());
-            }
-            else {
-                List<String> classNames = new ArrayList<String>();
-                classNames.add(c.getName());
-                map.put(cl, classNames);
-            }
-        }
+		log(String.format("Found %d various ClassLoader(s) inside the JVM.", map.size()));
+		return map;
+	}
 
-        log(String.format("Found %d various ClassLoader(s) inside the JVM.", map.size()));
-        return map;
-    }
+	public String getResults() {
+		SummarizerFactory factory = new SummarizerFactory();
+		Summarizer summarizer = factory.getSummarizer();
+		return summarizer.summarize(createClassLoaderMap());
+	}
 
+	private void writeToConsole(String results) {
+		System.out.println(results);
+	}
 
+	private void writeToFile(String outputFile, String results) {
+		PrintStream fileStream = null;
+		try {
+			fileStream = new PrintStream(outputFile);
+			fileStream.println(results);
+
+		} catch (IOException ioe) {
+			log(String.format("Exception creating outputFile - %s, writing to default output console", outputFile));
+			writeToConsole(results);
+		} finally {
+			if (fileStream != null) {
+				fileStream.close();
+			}
+		}
+	}
 }
