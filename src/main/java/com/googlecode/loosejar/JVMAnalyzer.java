@@ -16,19 +16,24 @@
 
 package com.googlecode.loosejar;
 
+import static com.googlecode.loosejar.Logger.log;
+
+import java.io.IOException;
+import java.io.PrintStream;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.googlecode.loosejar.Logger.*;
-
+import com.googlecode.loosejar.output.Summarizer;
+import com.googlecode.loosejar.output.SummarizerFactory;
 
 /**
- * This class represents the logical point of entry into the application. It analyzes the JVM
- * state and creates a map of classloaders to their loaded classes. The {@link #displayResults} method
- * delegates further processing of individual classloader data to the {@link ClassLoaderAnalyzer} class.
+ * This class represents the logical point of entry into the application. It
+ * analyzes the JVM state and creates a map of classloaders to their loaded
+ * classes. The {@link #displayResults} method delegates further processing of
+ * individual classloader data to the {@link ClassLoaderAnalyzer} class.
  *
  * @author Kyrill Alyoshin
  */
@@ -47,21 +52,18 @@ public class JVMAnalyzer implements Runnable {
     }
 
     /**
-     * Performs <em>all</em> application logic returning the results of the analysis.
+     * Performs <em>all</em> application logic returning the results of the
+     * analysis.
      */
-    public String displayResults() {
-        Map<ClassLoader, List<String>> classLoaderMap = createClassLoaderMap();
-
-        StringBuilder sb = new StringBuilder();
-        for (ClassLoader ucl : classLoaderMap.keySet()) {
-            ClassLoaderAnalyzer cli = new ClassLoaderAnalyzer(ucl, classLoaderMap.get(ucl));
-            cli.analyze();
-            sb.append(cli.summary());
+    public void displayResults() {
+        String outputFile = System.getProperty("loosejar.outputFile");
+        String results = getResults();
+        if (outputFile == null || outputFile.equals("")) {
+            writeToConsole(results);
+        } else {
+            writeToFile(outputFile, results);
         }
 
-        String results = sb.toString();
-        log(results);
-        return results;
     }
 
     private Map<ClassLoader, List<String>> createClassLoaderMap() {
@@ -72,12 +74,13 @@ public class JVMAnalyzer implements Runnable {
 
         for (Class<?> c : loadedClasses) {
             ClassLoader cl = c.getClassLoader();
-            if (cl == null) continue;  //we don't need Bootstrap classloader if it is represented as null
+            if (cl == null)
+                continue; // we don't need Bootstrap classloader if it is
+                          // represented as null
 
             if (map.containsKey(cl)) {
                 map.get(cl).add(c.getName());
-            }
-            else {
+            } else {
                 List<String> classNames = new ArrayList<String>();
                 classNames.add(c.getName());
                 map.put(cl, classNames);
@@ -88,5 +91,29 @@ public class JVMAnalyzer implements Runnable {
         return map;
     }
 
+    public String getResults() {
+        SummarizerFactory factory = new SummarizerFactory();
+        Summarizer summarizer = factory.getSummarizer();
+        return summarizer.summarize(createClassLoaderMap());
+    }
 
+    private void writeToConsole(String results) {
+        System.out.println(results);
+    }
+
+    private void writeToFile(String outputFile, String results) {
+        PrintStream fileStream = null;
+        try {
+            fileStream = new PrintStream(outputFile);
+            fileStream.println(results);
+
+        } catch (IOException ioe) {
+            log(String.format("Exception creating outputFile - %s, writing to default output console", outputFile));
+            writeToConsole(results);
+        } finally {
+            if (fileStream != null) {
+                fileStream.close();
+            }
+        }
+    }
 }

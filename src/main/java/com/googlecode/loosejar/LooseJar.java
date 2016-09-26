@@ -35,6 +35,6 @@ public class LooseJar implements LooseJarMBean {
      * Delegates processing logic to {@link JVMAnalyzer#displayResults()}.
      */
     public String summary() {
-        return new JVMAnalyzer(instrumentation).displayResults();
+        return new JVMAnalyzer(instrumentation).getResults();
     }
 }
