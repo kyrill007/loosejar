@@ -33,9 +33,10 @@ import static com.googlecode.loosejar.Logger.log;
 /**
  * The purpose of this class is to:
  * <ul>
- * <li> determine all of the the jars on the classpath </li>
- * <li> discover which jars where exercised in respect to the classes loaded by the classloader </li>
- * <li> display the summary of the analysis </li>
+ * <li>determine all of the the jars on the classpath</li>
+ * <li>discover which jars where exercised in respect to the classes loaded by
+ * the classloader</li>
+ * <li>display the summary of the analysis</li>
  * </ul>
  *
  * @author Kyrill Alyoshin
@@ -51,10 +52,13 @@ public class ClassLoaderAnalyzer {
     private final List<JarArchive> jars = new ArrayList<JarArchive>();
 
     /**
-     * Create an instance of the class and determine all the jars on the supplied classloader's classpath.
+     * Create an instance of the class and determine all the jars on the
+     * supplied classloader's classpath.
      *
-     * @param classLoader        the classloader to be analyzed
-     * @param classLoaderClasses the classes that this classloaded has loaded
+     * @param classLoader
+     *            the classloader to be analyzed
+     * @param classLoaderClasses
+     *            the classes that this classloaded has loaded
      */
     public ClassLoaderAnalyzer(ClassLoader classLoader, List<String> classLoaderClasses) {
         this.classLoader = classLoader;
@@ -66,27 +70,32 @@ public class ClassLoaderAnalyzer {
         List<JarArchive> list = new ArrayList<JarArchive>();
 
         Enumeration<URL> urls = findManifestResources();
-        if (urls == null) return list;
+        if (urls == null)
+            return list;
 
         while (urls.hasMoreElements()) {
             String rawUrl = urls.nextElement().toString();
 
-            if (!rawUrl.startsWith("jar:")) continue;
+            if (!rawUrl.startsWith("jar:"))
+                continue;
 
-            //convert into a normal URI
+            // convert into a normal URI
             String uriStr = rawUrl.substring(MANIFEST_PREFIX_LENGTH, rawUrl.length() - MANIFEST_SUFFIX_LENGTH);
 
-            //we don't want to examine JDK jars;
-            //ignore own loosejar.jar as well
+            // we don't want to examine JDK jars;
+            // ignore own loosejar.jar as well
             if (uriStr.contains(JAVA_HOME.toString()) || uriStr.contains(PROJECT_NAME)) {
                 continue;
             }
 
-            uriStr = uriStr.replaceAll("\\s", "%20"); //escape spaces
+            uriStr = uriStr.replaceAll("\\s", "%20"); // escape spaces
 
-            // this is a workaround for a common bug in some classloader implementations,
-            // which often return URIs in the following format [file:c:/location/...]
-            // the point is that 'file:' must be followed by '/' to be a valid URI.
+            // this is a workaround for a common bug in some classloader
+            // implementations,
+            // which often return URIs in the following format
+            // [file:c:/location/...]
+            // the point is that 'file:' must be followed by '/' to be a valid
+            // URI.
             if (uriStr.startsWith("file:") && !uriStr.startsWith("file:/")) {
                 uriStr = "file:/" + uriStr.substring("file:".length());
             }
@@ -95,14 +104,14 @@ public class ClassLoaderAnalyzer {
             try {
                 URI uri = new URI(uriStr);
                 jar = new File(uri);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 log("IGNORED: [" + uriStr + "]. Bad URI syntax.");
                 continue;
             }
 
             // just real jars are needed;
-            // directories and incorrectly specified classpath entries are not needed.
+            // directories and incorrectly specified classpath entries are not
+            // needed.
             if (jar.isFile()) {
                 list.add(new JarArchive(jar));
             }
@@ -111,19 +120,21 @@ public class ClassLoaderAnalyzer {
     }
 
     /**
-     * Return an <em>unmodifiable</em> list of jars on the classloader's classpath.
+     * Return an <em>unmodifiable</em> list of jars on the classloader's
+     * classpath.
      */
     public List<JarArchive> getJars() {
         return Collections.unmodifiableList(jars);
     }
 
     /**
-     * Perform main project analysis determining the relationship between available jars
-     * and the classes loaded in the JVM.
+     * Perform main project analysis determining the relationship between
+     * available jars and the classes loaded in the JVM.
      */
     public void analyze() {
         for (JarArchive jar : jars) {
-            //find which classes loaded by this classloader came from a given jar.
+            // find which classes loaded by this classloader came from a given
+            // jar.
             Collection<String> usedClasses = CollectionUtils.intersection(classLoaderClasses, jar.getAllClassNames());
             jar.setNamesOfLoadedClasses(new HashSet<String>(usedClasses));
         }
@@ -131,10 +142,12 @@ public class ClassLoaderAnalyzer {
 
     /**
      * Display the analysis summary.
+     * 
      * @deprecated
      */
     public String summary() {
-        if (jars.isEmpty()) return "";
+        if (jars.isEmpty())
+            return "";
 
         StringBuilder buf = new StringBuilder();
         buf.append("Summary for [" + classLoader.getClass().getName() + "] classloader:\n\n");
@@ -142,14 +155,14 @@ public class ClassLoaderAnalyzer {
             buf.append("    ");
             buf.append("Jar: " + jar.getJar() + '\n');
             buf.append("    ");
-            buf.append(String.format("Utilization: %.2f%% - loaded %d of %d classes.\n\n",
-                    jar.getUsagePercentage(), jar.getNamesOfLoadedClasses().size(), jar.getAllClassNames().size()));
+            buf.append(String.format("Utilization: %.2f%% - loaded %d of %d classes.\n\n", jar.getUsagePercentage(),
+                    jar.getNamesOfLoadedClasses().size(), jar.getAllClassNames().size()));
         }
         return buf.toString();
     }
 
     private static URL javaHome() {
-        //return normalized URL
+        // return normalized URL
         File jHome = new File(System.getProperty("java.home"));
         String name = jHome.getName();
 
@@ -162,37 +175,37 @@ public class ClassLoaderAnalyzer {
 
         try {
             return jHome.toURI().toURL();
-        }
-        catch (MalformedURLException e) {
-            //this shouldn't happen; the value of java.home system property should be always parseable.
+        } catch (MalformedURLException e) {
+            // this shouldn't happen; the value of java.home system property
+            // should be always parseable.
             throw new RuntimeException(e);
         }
     }
 
     @SuppressWarnings("unchecked")
     private Enumeration<URL> findManifestResources() {
-        //invoke #findResource(String) method reflectively as it is protected in java.lang.ClassLoader
+        // invoke #findResource(String) method reflectively as it is protected
+        // in java.lang.ClassLoader
         try {
-            Method method = findMethod(classLoader.getClass(), "findResources", new Class<?>[]{String.class});
+            Method method = findMethod(classLoader.getClass(), "findResources", new Class<?>[] { String.class });
 
-            //attempt to disable security check for non-public methods.
+            // attempt to disable security check for non-public methods.
             if (!Modifier.isPublic(method.getModifiers()) && !method.isAccessible()) {
                 method.setAccessible(true);
             }
 
-            // This will return a transitive closure of all jars on the classpath
+            // This will return a transitive closure of all jars on the
+            // classpath
             // in the form of
             // jar:file:/foo/bar/baz.jar!/META-INF/MANIFEST.MF
             return (Enumeration<URL>) method.invoke(classLoader, "META-INF/MANIFEST.MF");
 
-        }
-        catch (IllegalAccessException e) {
-            log("Failed to invoke #findResources(String) method on classloader [" + classLoader + "]. " +
-                    "No access permissions.");
-        }
-        catch (InvocationTargetException e) {
-            log("Failed to invoke #findResources(String) method on classloader [" + classLoader + "]. " +
-                    "The classloader is likely no longer available.");
+        } catch (IllegalAccessException e) {
+            log("Failed to invoke #findResources(String) method on classloader [" + classLoader + "]. "
+                    + "No access permissions.");
+        } catch (InvocationTargetException e) {
+            log("Failed to invoke #findResources(String) method on classloader [" + classLoader + "]. "
+                    + "The classloader is likely no longer available.");
         }
         return null;
     }
@@ -211,4 +224,3 @@ public class ClassLoaderAnalyzer {
         return null;
     }
 }
-

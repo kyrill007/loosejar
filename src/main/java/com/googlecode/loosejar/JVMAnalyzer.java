@@ -38,82 +38,82 @@ import com.googlecode.loosejar.output.SummarizerFactory;
  * @author Kyrill Alyoshin
  */
 public class JVMAnalyzer implements Runnable {
-	private final Instrumentation instrumentation;
+    private final Instrumentation instrumentation;
 
-	public JVMAnalyzer(Instrumentation instr) {
-		this.instrumentation = instr;
-	}
+    public JVMAnalyzer(Instrumentation instr) {
+        this.instrumentation = instr;
+    }
 
-	/**
-	 * Simply invokes {@link #displayResults()}.
-	 */
-	public void run() {
-		displayResults();
-	}
+    /**
+     * Simply invokes {@link #displayResults()}.
+     */
+    public void run() {
+        displayResults();
+    }
 
-	/**
-	 * Performs <em>all</em> application logic returning the results of the
-	 * analysis.
-	 */
-	public void displayResults() {
-		String outputFile = System.getProperty("loosejar.outputFile");
-		String results = getResults();
-		if (outputFile == null || outputFile.equals("")) {
-			writeToConsole(results);
-		} else {
-			writeToFile(outputFile, results);
-		}
+    /**
+     * Performs <em>all</em> application logic returning the results of the
+     * analysis.
+     */
+    public void displayResults() {
+        String outputFile = System.getProperty("loosejar.outputFile");
+        String results = getResults();
+        if (outputFile == null || outputFile.equals("")) {
+            writeToConsole(results);
+        } else {
+            writeToFile(outputFile, results);
+        }
 
-	}
+    }
 
-	private Map<ClassLoader, List<String>> createClassLoaderMap() {
-		Map<ClassLoader, List<String>> map = new HashMap<ClassLoader, List<String>>();
+    private Map<ClassLoader, List<String>> createClassLoaderMap() {
+        Map<ClassLoader, List<String>> map = new HashMap<ClassLoader, List<String>>();
 
-		Class<?>[] loadedClasses = instrumentation.getAllLoadedClasses();
-		log(String.format("Found %d classes loaded in the JVM.", loadedClasses.length));
+        Class<?>[] loadedClasses = instrumentation.getAllLoadedClasses();
+        log(String.format("Found %d classes loaded in the JVM.", loadedClasses.length));
 
-		for (Class<?> c : loadedClasses) {
-			ClassLoader cl = c.getClassLoader();
-			if (cl == null)
-				continue; // we don't need Bootstrap classloader if it is
-							// represented as null
+        for (Class<?> c : loadedClasses) {
+            ClassLoader cl = c.getClassLoader();
+            if (cl == null)
+                continue; // we don't need Bootstrap classloader if it is
+                          // represented as null
 
-			if (map.containsKey(cl)) {
-				map.get(cl).add(c.getName());
-			} else {
-				List<String> classNames = new ArrayList<String>();
-				classNames.add(c.getName());
-				map.put(cl, classNames);
-			}
-		}
+            if (map.containsKey(cl)) {
+                map.get(cl).add(c.getName());
+            } else {
+                List<String> classNames = new ArrayList<String>();
+                classNames.add(c.getName());
+                map.put(cl, classNames);
+            }
+        }
 
-		log(String.format("Found %d various ClassLoader(s) inside the JVM.", map.size()));
-		return map;
-	}
+        log(String.format("Found %d various ClassLoader(s) inside the JVM.", map.size()));
+        return map;
+    }
 
-	public String getResults() {
-		SummarizerFactory factory = new SummarizerFactory();
-		Summarizer summarizer = factory.getSummarizer();
-		return summarizer.summarize(createClassLoaderMap());
-	}
+    public String getResults() {
+        SummarizerFactory factory = new SummarizerFactory();
+        Summarizer summarizer = factory.getSummarizer();
+        return summarizer.summarize(createClassLoaderMap());
+    }
 
-	private void writeToConsole(String results) {
-		System.out.println(results);
-	}
+    private void writeToConsole(String results) {
+        System.out.println(results);
+    }
 
-	private void writeToFile(String outputFile, String results) {
-		PrintStream fileStream = null;
-		try {
-			fileStream = new PrintStream(outputFile);
-			fileStream.println(results);
+    private void writeToFile(String outputFile, String results) {
+        PrintStream fileStream = null;
+        try {
+            fileStream = new PrintStream(outputFile);
+            fileStream.println(results);
 
-		} catch (IOException ioe) {
-			log(String.format("Exception creating outputFile - %s, writing to default output console", outputFile));
-			writeToConsole(results);
-		} finally {
-			if (fileStream != null) {
-				fileStream.close();
-			}
-		}
-	}
+        } catch (IOException ioe) {
+            log(String.format("Exception creating outputFile - %s, writing to default output console", outputFile));
+            writeToConsole(results);
+        } finally {
+            if (fileStream != null) {
+                fileStream.close();
+            }
+        }
+    }
 }
