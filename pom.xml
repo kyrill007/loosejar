@@ -56,6 +56,18 @@
 						</excludes>
 					</configuration>
 				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-jar-plugin</artifactId>
+					<version>3.0.2</version>
+					<configuration>
+						<archive>
+							<manifestEntries>
+								<Premain-Class>com.googlecode.loosejar.LooseJarAgent</Premain-Class>
+							</manifestEntries>
+						</archive>
+					</configuration>
+				</plugin>
 			</plugins>
 		</pluginManagement>
 	</build>
