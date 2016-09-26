@@ -24,7 +24,7 @@ public class CSVFormatSummarizer implements Summarizer {
 	}
 
 	private void writeSummaryForJar(ClassLoader classLoader, JarArchive jar) {
-		builder.append((String.format("%s,%s,%.2f%%,%d,%d", classLoader.getClass().getName(), jar.getJar(),
+		builder.append((String.format("%s,%s,%.2f%%,%d,%d\n", classLoader.getClass().getName(), jar.getJar(),
 				jar.getUsagePercentage(), jar.getNamesOfLoadedClasses().size(), jar.getAllClassNames().size())));
 
 	}
