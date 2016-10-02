@@ -1,9 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.googlecode</groupId>
+	<groupId>com.googlecode.loosejar</groupId>
 	<artifactId>loosejar</artifactId>
-	<version>1.0.2-SNAPSHOT</version>
+	<version>1.1.0-SNAPSHOT</version>
 	<name>loosejar</name>
 	<description>Java Agent which can discover unnecessary jars in classpath</description>
 
@@ -17,8 +17,22 @@
 
 	<issueManagement>
 		<system>GitHub</system>
-		<url>https://github.com/eclipse-jetty/eclipse-jetty-plugin/issues/</url>
+		<url>https://github.com/kyrill007/loosejar/issues</url>
 	</issueManagement>
+
+	<developers>
+		<developer>
+			<name>Kyrill Alyoshin</name>
+			<email>emaild@site.com</email>
+			<url>http://kyrill007.livejournal.com</url>
+		</developer>
+	</developers>
+
+	<scm>
+		<connection>scm:git:git://github.com/kyrill007/loosejar.git</connection>
+		<developerConnection>scm:git:ssh://github.com/kyrill007/loosejar.git</developerConnection>
+		<url>http://github.com/kyrill007/loosejar/tree/master</url>
+	</scm>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
