@@ -16,8 +16,6 @@
 
 package com.googlecode.loosejar;
 
-import com.googlecode.loosejar.org.apache.commons.collections15.CollectionUtils;
-
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -25,10 +23,18 @@ import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.List;
 
-import static com.googlecode.loosejar.Constants.PROJECT_NAME;
-import static com.googlecode.loosejar.Logger.log;
+import com.googlecode.loosejar.org.apache.commons.collections15.CollectionUtils;
+
+import static com.googlecode.loosejar.Constants.*;
+import static com.googlecode.loosejar.Logger.*;
 
 /**
  * The purpose of this class is to:
@@ -55,10 +61,8 @@ public class ClassLoaderAnalyzer {
      * Create an instance of the class and determine all the jars on the
      * supplied classloader's classpath.
      *
-     * @param classLoader
-     *            the classloader to be analyzed
-     * @param classLoaderClasses
-     *            the classes that this classloaded has loaded
+     * @param classLoader        the classloader to be analyzed
+     * @param classLoaderClasses the classes that this classloaded has loaded
      */
     public ClassLoaderAnalyzer(ClassLoader classLoader, List<String> classLoaderClasses) {
         this.classLoader = classLoader;
@@ -70,14 +74,16 @@ public class ClassLoaderAnalyzer {
         List<JarArchive> list = new ArrayList<JarArchive>();
 
         Enumeration<URL> urls = findManifestResources();
-        if (urls == null)
+        if (urls == null) {
             return list;
+        }
 
         while (urls.hasMoreElements()) {
             String rawUrl = urls.nextElement().toString();
 
-            if (!rawUrl.startsWith("jar:"))
+            if (!rawUrl.startsWith("jar:")) {
                 continue;
+            }
 
             // convert into a normal URI
             String uriStr = rawUrl.substring(MANIFEST_PREFIX_LENGTH, rawUrl.length() - MANIFEST_SUFFIX_LENGTH);
@@ -142,12 +148,13 @@ public class ClassLoaderAnalyzer {
 
     /**
      * Display the analysis summary.
-     * 
+     *
      * @deprecated
      */
     public String summary() {
-        if (jars.isEmpty())
+        if (jars.isEmpty()) {
             return "";
+        }
 
         StringBuilder buf = new StringBuilder();
         buf.append("Summary for [" + classLoader.getClass().getName() + "] classloader:\n\n");
@@ -187,7 +194,7 @@ public class ClassLoaderAnalyzer {
         // invoke #findResource(String) method reflectively as it is protected
         // in java.lang.ClassLoader
         try {
-            Method method = findMethod(classLoader.getClass(), "findResources", new Class<?>[] { String.class });
+            Method method = findMethod(classLoader.getClass(), "findResources", new Class<?>[]{String.class});
 
             // attempt to disable security check for non-public methods.
             if (!Modifier.isPublic(method.getModifiers()) && !method.isAccessible()) {

@@ -46,7 +46,9 @@ public class JarArchive {
         this.jar = jar;
 
         for (String entry : getEntries(jar)) {
-            if (!entry.endsWith(".class")) continue;
+            if (!entry.endsWith(".class")) {
+                continue;
+            }
 
             //convert 'name/of/package/someclass.class' into 'name.of.package.someclass'
             allClassNames.add(entry.substring(0, entry.length() - ".class".length()).replace('/', '.'));
@@ -85,7 +87,9 @@ public class JarArchive {
      * Return the percentage of classes loaded into the JVM in comparison to all available in this jar file.
      */
     public double getUsagePercentage() {
-        if (allClassNames.isEmpty()) return 0;
+        if (allClassNames.isEmpty()) {
+            return 0;
+        }
 
         return ((double) namesOfLoadedClasses.size() / (double) allClassNames.size()) * 100;
     }
@@ -101,8 +105,7 @@ public class JarArchive {
         Enumeration<JarEntry> entries;
         try {
             entries = new JarFile(archive).entries();
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException("Failed to read entries from a jar archive [" + archive + "]: " + e);
         }
 

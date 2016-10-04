@@ -16,8 +16,6 @@
 
 package com.googlecode.loosejar;
 
-import static com.googlecode.loosejar.Logger.log;
-
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.instrument.Instrumentation;
@@ -28,6 +26,8 @@ import java.util.Map;
 
 import com.googlecode.loosejar.output.Summarizer;
 import com.googlecode.loosejar.output.SummarizerFactory;
+
+import static com.googlecode.loosejar.Logger.*;
 
 /**
  * This class represents the logical point of entry into the application. It
@@ -74,9 +74,10 @@ public class JVMAnalyzer implements Runnable {
 
         for (Class<?> c : loadedClasses) {
             ClassLoader cl = c.getClassLoader();
-            if (cl == null)
+            if (cl == null) {
                 continue; // we don't need Bootstrap classloader if it is
-                          // represented as null
+            }
+            // represented as null
 
             if (map.containsKey(cl)) {
                 map.get(cl).add(c.getName());

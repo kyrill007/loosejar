@@ -61,8 +61,7 @@ public class LooseJarAgent {
         ObjectName name = null;
         try {
             name = new ObjectName(jmxName);
-        }
-        catch (MalformedObjectNameException e) {
+        } catch (MalformedObjectNameException e) {
             success = false;
             log("Failed to register " + PROJECT_NAME + " with JMX, because the object name is malformed: " + e);
         }
@@ -70,17 +69,14 @@ public class LooseJarAgent {
         if (name != null) {
             try {
                 mbs.registerMBean(new LooseJar(instrumentation), name);
-            }
-            catch (InstanceAlreadyExistsException e) {
+            } catch (InstanceAlreadyExistsException e) {
                 success = false;
                 log("Failed to register " + PROJECT_NAME + " with JMX, " +
                         "because the instance is already registered: " + e);
-            }
-            catch (MBeanRegistrationException e) {
+            } catch (MBeanRegistrationException e) {
                 success = false;
                 log("Failed to register " + PROJECT_NAME + " with JMX due to an unknown exception: " + e);
-            }
-            catch (NotCompliantMBeanException e) {
+            } catch (NotCompliantMBeanException e) {
                 success = false;
                 log("Failed to register " + PROJECT_NAME + " with JMX due to an unknown exception: " + e);
             }
@@ -88,8 +84,7 @@ public class LooseJarAgent {
 
         if (success) {
             log("Registered " + PROJECT_NAME + " as a JMX service: [" + jmxName + "]\n");
-        }
-        else {
+        } else {
             log("JMX Registration failed!\n");
         }
     }

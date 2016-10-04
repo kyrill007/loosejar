@@ -52,7 +52,6 @@ public final class CollectionUtils {
     /**
      * Returns a {@link Collection} containing the intersection
      * of the given {@link Collection}s.
-     * <p/>
      * The cardinality of each element in the returned {@link Collection}
      * will be equal to the minimum of the cardinality of that element
      * in the two given {@link Collection}s.
@@ -80,21 +79,19 @@ public final class CollectionUtils {
      * Returns a {@link Map} mapping each unique element in the given
      * {@link Iterable} to an {@link Integer} representing the number
      * of occurrences of that element in the {@link Iterable}.
-     * <p/>
      * Only those elements present in the Iterable will appear as
      * keys in the map.
      *
      * @param iterable the collection to get the cardinality map for, must not be null
      * @return the populated cardinality map
      */
-    public static <E> Map<E, java.lang.Integer> getCardinalityMap(final Iterable<E> iterable) {
+    public static <E> Map<E, Integer> getCardinalityMap(final Iterable<E> iterable) {
         Map<E, Integer> count = new HashMap<E, Integer>();
         for (E obj : iterable) {
             Integer c = count.get(obj);
             if (c == null) {
                 count.put(obj, INTEGER_ONE);
-            }
-            else {
+            } else {
                 count.put(obj, c + 1);
             }
         }

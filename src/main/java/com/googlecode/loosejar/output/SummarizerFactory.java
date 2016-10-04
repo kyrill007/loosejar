@@ -11,11 +11,11 @@ public class SummarizerFactory {
         Summarizer writer = null;
 
         switch (format) {
-        case CSV:
-            writer = new CSVFormatSummarizer();
-            break;
-        default:
-            writer = new VerbalSummarizer();
+            case CSV:
+                writer = new CSVFormatSummarizer();
+                break;
+            default:
+                writer = new VerbalSummarizer();
         }
 
         return writer;
