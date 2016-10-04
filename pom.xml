@@ -1,96 +1,104 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.googlecode.loosejar</groupId>
-	<artifactId>loosejar</artifactId>
-	<version>1.1.0-SNAPSHOT</version>
-	<name>loosejar</name>
-	<description>Java Agent which can discover unnecessary jars in classpath</description>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-	<licenses>
-		<license>
-			<name>The Apache Software License, Version 2.0</name>
-			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-			<distribution>repo</distribution>
-		</license>
-	</licenses>
+    <parent>
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>9</version>
+    </parent>
 
-	<issueManagement>
-		<system>GitHub</system>
-		<url>https://github.com/kyrill007/loosejar/issues</url>
-	</issueManagement>
+    <groupId>com.googlecode.loosejar</groupId>
+    <artifactId>loosejar</artifactId>
+    <version>1.1.0</version>
+    <name>loosejar</name>
+    <description>Java Agent which can discover unnecessary jars in classpath</description>
 
-	<developers>
-		<developer>
-			<name>Kyrill Alyoshin</name>
-			<email>emaild@site.com</email>
-			<url>http://kyrill007.livejournal.com</url>
-		</developer>
-	</developers>
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
 
-	<scm>
-		<connection>scm:git:git://github.com/kyrill007/loosejar.git</connection>
-		<developerConnection>scm:git:ssh://github.com/kyrill007/loosejar.git</developerConnection>
-		<url>http://github.com/kyrill007/loosejar/tree/master</url>
-	</scm>
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/kyrill007/loosejar/issues</url>
+    </issueManagement>
 
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.compiler.source>1.5</maven.compiler.source>
-		<maven.compiler.target>1.5</maven.compiler.target>
-	</properties>
+    <developers>
+        <developer>
+            <name>Kyrill Alyoshin</name>
+        </developer>
+        <developer>
+            <name>Yogesh Rao</name>
+        </developer>
+    </developers>
 
-	<build>
-		<pluginManagement>
-			<plugins>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-compiler-plugin</artifactId>
-					<version>3.5.1</version>
-					<configuration>
-						<source>1.5</source>
-						<target>1.5</target>
-					</configuration>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-site-plugin</artifactId>
-					<version>3.5.1</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-surefire-plugin</artifactId>
-					<version>2.19.1</version>
-					<configuration>
-						<includes>
-							<include>**/*Tests.java</include>
-						</includes>
-						<excludes>
-							<exclude>**/Abstract*.java</exclude>
-						</excludes>
-					</configuration>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-jar-plugin</artifactId>
-					<version>3.0.2</version>
-					<configuration>
-						<archive>
-							<manifestEntries>
-								<Premain-Class>com.googlecode.loosejar.LooseJarAgent</Premain-Class>
-							</manifestEntries>
-						</archive>
-					</configuration>
-				</plugin>
-			</plugins>
-		</pluginManagement>
-	</build>
+    <scm>
+        <connection>scm:git:git://github.com/kyrill007/loosejar.git</connection>
+        <developerConnection>scm:git:ssh://github.com/kyrill007/loosejar.git</developerConnection>
+        <url>http://github.com/kyrill007/loosejar/tree/master</url>
+        <tag>loosejar-1.1.0</tag>
+    </scm>
 
-	<dependencies>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.4</version>
-		</dependency>
-	</dependencies>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.5</maven.compiler.source>
+        <maven.compiler.target>1.5</maven.compiler.target>
+    </properties>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.5.1</version>
+                    <configuration>
+                        <source>1.5</source>
+                        <target>1.5</target>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <version>3.5.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.19.1</version>
+                    <configuration>
+                        <includes>
+                            <include>**/*Tests.java</include>
+                        </includes>
+                        <excludes>
+                            <exclude>**/Abstract*.java</exclude>
+                        </excludes>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>3.0.2</version>
+                    <configuration>
+                        <archive>
+                            <manifestEntries>
+                                <Premain-Class>com.googlecode.loosejar.LooseJarAgent</Premain-Class>
+                            </manifestEntries>
+                        </archive>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.4</version>
+        </dependency>
+    </dependencies>
 </project>
