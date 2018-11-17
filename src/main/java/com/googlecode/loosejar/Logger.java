@@ -23,8 +23,8 @@ import static com.googlecode.loosejar.Constants.*;
  *
  * @author Kyrill Alyoshin
  */
-public final class Logger {
-    public static void log(String message) {
+final class Logger {
+    static void log(String message) {
         //noinspection UseOfSystemOutOrSystemErr
         System.out.println('[' + PROJECT_NAME + "]: " + message);
     }

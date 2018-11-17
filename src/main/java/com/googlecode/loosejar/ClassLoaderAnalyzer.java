@@ -17,18 +17,16 @@
 package com.googlecode.loosejar;
 
 import java.io.File;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 
 import com.googlecode.loosejar.org.apache.commons.collections15.CollectionUtils;
@@ -62,7 +60,7 @@ public class ClassLoaderAnalyzer {
      * supplied classloader's classpath.
      *
      * @param classLoader        the classloader to be analyzed
-     * @param classLoaderClasses the classes that this classloaded has loaded
+     * @param classLoaderClasses the classes that this classloader has loaded
      */
     public ClassLoaderAnalyzer(ClassLoader classLoader, List<String> classLoaderClasses) {
         this.classLoader = classLoader;
@@ -70,17 +68,41 @@ public class ClassLoaderAnalyzer {
         this.jars.addAll(findAllJars());
     }
 
+    private static List<String> toList(Enumeration<URL> enumeration) {
+        if (enumeration == null) {
+            return new LinkedList<String>();
+        }
+
+        List<String> ret = new LinkedList<String>();
+        while (enumeration.hasMoreElements()) {
+            ret.add(enumeration.nextElement().toString());
+        }
+        return ret;
+    }
+
+    /**
+     * Return an <em>unmodifiable</em> list of jars on the classloader's
+     * classpath.
+     */
+    public List<JarArchive> getJars() {
+        return Collections.unmodifiableList(jars);
+    }
+
     private List<JarArchive> findAllJars() {
         List<JarArchive> list = new ArrayList<JarArchive>();
 
-        Enumeration<URL> urls = findManifestResources();
-        if (urls == null) {
+        List<String> urls;
+        try {
+            urls = findManifestResources();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        if (urls == null || urls.isEmpty()) {
             return list;
         }
 
-        while (urls.hasMoreElements()) {
-            String rawUrl = urls.nextElement().toString();
-
+        for (String rawUrl : urls) {
             if (!rawUrl.startsWith("jar:")) {
                 continue;
             }
@@ -126,46 +148,15 @@ public class ClassLoaderAnalyzer {
     }
 
     /**
-     * Return an <em>unmodifiable</em> list of jars on the classloader's
-     * classpath.
-     */
-    public List<JarArchive> getJars() {
-        return Collections.unmodifiableList(jars);
-    }
-
-    /**
      * Perform main project analysis determining the relationship between
      * available jars and the classes loaded in the JVM.
      */
     public void analyze() {
         for (JarArchive jar : jars) {
-            // find which classes loaded by this classloader came from a given
-            // jar.
+            // find which classes loaded by this classloader came from a given jar.
             Collection<String> usedClasses = CollectionUtils.intersection(classLoaderClasses, jar.getAllClassNames());
             jar.setNamesOfLoadedClasses(new HashSet<String>(usedClasses));
         }
-    }
-
-    /**
-     * Display the analysis summary.
-     *
-     * @deprecated
-     */
-    public String summary() {
-        if (jars.isEmpty()) {
-            return "";
-        }
-
-        StringBuilder buf = new StringBuilder();
-        buf.append("Summary for [" + classLoader.getClass().getName() + "] classloader:\n\n");
-        for (JarArchive jar : jars) {
-            buf.append("    ");
-            buf.append("Jar: " + jar.getJar() + '\n');
-            buf.append("    ");
-            buf.append(String.format("Utilization: %.2f%% - loaded %d of %d classes.\n\n", jar.getUsagePercentage(),
-                    jar.getNamesOfLoadedClasses().size(), jar.getAllClassNames().size()));
-        }
-        return buf.toString();
     }
 
     private static URL javaHome() {
@@ -189,45 +180,55 @@ public class ClassLoaderAnalyzer {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private Enumeration<URL> findManifestResources() {
-        // invoke #findResource(String) method reflectively as it is protected
-        // in java.lang.ClassLoader
-        try {
-            Method method = findMethod(classLoader.getClass(), "findResources", new Class<?>[]{String.class});
-
-            // attempt to disable security check for non-public methods.
-            if (!Modifier.isPublic(method.getModifiers()) && !method.isAccessible()) {
-                method.setAccessible(true);
-            }
-
-            // This will return a transitive closure of all jars on the
-            // classpath
-            // in the form of
-            // jar:file:/foo/bar/baz.jar!/META-INF/MANIFEST.MF
-            return (Enumeration<URL>) method.invoke(classLoader, "META-INF/MANIFEST.MF");
-
-        } catch (IllegalAccessException e) {
-            log("Failed to invoke #findResources(String) method on classloader [" + classLoader + "]. "
-                    + "No access permissions.");
-        } catch (InvocationTargetException e) {
-            log("Failed to invoke #findResources(String) method on classloader [" + classLoader + "]. "
-                    + "The classloader is likely no longer available.");
+    /**
+     * Display the analysis summary.
+     */
+    @SuppressWarnings("unused")
+    public String summary() {
+        if (jars.isEmpty()) {
+            return "";
         }
-        return null;
+
+        StringBuilder buf = new StringBuilder();
+        buf.append("Summary for [" + classLoader.getClass().getName() + "] classloader:\n\n");
+        //noinspection Duplicates
+        for (JarArchive jar : jars) {
+            buf.append("    ");
+            buf.append("Jar: " + jar.getJar() + '\n');
+            buf.append("    ");
+            buf.append(String.format("Utilization: %.2f%% - loaded %d of %d classes.\n\n", jar.getUsagePercentage(),
+                    jar.getNamesOfLoadedClasses().size(), jar.getAllClassNames().size()));
+        }
+        return buf.toString();
     }
 
-    private Method findMethod(Class<?> clazz, String name, Class<?>[] paramTypes) {
-        Class<?> type = clazz;
-        while (!Object.class.equals(type) && type != null) {
-            Method[] methods = type.getDeclaredMethods();
-            for (Method method : methods) {
-                if (name.equals(method.getName()) && Arrays.equals(paramTypes, method.getParameterTypes())) {
-                    return method;
-                }
-            }
-            type = type.getSuperclass();
+    private List<String> findManifestResources() throws IOException {
+        // This will return a transitive closure of all jars on the
+        // classpath in the form of
+        // jar:file:/foo/bar/baz.jar!/META-INF/MANIFEST.MF
+        // Note that this method will return *all* resources, that is resources
+        // available *directly* to this classloader as well as its *parent* classloaders
+        // which is not exactly what we want. What we want to return are the resources
+        // that are available only *directly* to this classloader (i.e., no parents!)
+        // Thus we must subtract those below
+        List<String> resources = toList(classLoader.getResources("META-INF/MANIFEST.MF"));
+
+        ClassLoader parent = classLoader.getParent();
+        Enumeration<URL> parentResources;
+        if (parent != null) {
+            parentResources = parent.getResources("META-INF/MANIFEST.MF");
+        } else {
+            parentResources = ClassLoader.getSystemResources("META-INF/MANIFEST.MF");
         }
-        return null;
+
+        //parent resources must be removed, note that it has to be done in List
+        //context (i.e., not Set context) to preserve cardinality.
+        while (parentResources.hasMoreElements()) {
+            String url = parentResources.nextElement().toString();
+            resources.remove(url);
+        }
+
+        return resources;
     }
+
 }

@@ -42,7 +42,7 @@ public class JarArchive {
     /**
      * Create an instance and convert internal jar class entries into valid class names.
      */
-    public JarArchive(File jar) {
+    JarArchive(File jar) {
         this.jar = jar;
 
         for (String entry : getEntries(jar)) {
@@ -79,7 +79,7 @@ public class JarArchive {
     /**
      * Set names of classes loaded from this jar.
      */
-    public void setNamesOfLoadedClasses(Set<String> namesOfLoadedClasses) {
+    void setNamesOfLoadedClasses(Set<String> namesOfLoadedClasses) {
         this.namesOfLoadedClasses = namesOfLoadedClasses;
     }
 
@@ -88,33 +88,28 @@ public class JarArchive {
      */
     public double getUsagePercentage() {
         if (allClassNames.isEmpty()) {
-            return 0;
+            return 0.0;
         }
 
         return ((double) namesOfLoadedClasses.size() / (double) allClassNames.size()) * 100;
     }
 
-    /**
-     * Check whether there exists at least one class loaded from this jar.
-     */
-    public boolean isUsed() {
-        return !namesOfLoadedClasses.isEmpty();
-    }
-
     private List<String> getEntries(File archive) {
-        Enumeration<JarEntry> entries;
         try {
-            entries = new JarFile(archive).entries();
+            JarFile jarFile = new JarFile(archive);
+            try {
+                Enumeration<JarEntry> entries = jarFile.entries();
+                List<String> names = new ArrayList<String>();
+                while (entries.hasMoreElements()) {
+                    names.add(entries.nextElement().getName());
+                }
+                return names;
+            } finally {
+                jarFile.close();
+            }
         } catch (IOException e) {
             throw new RuntimeException("Failed to read entries from a jar archive [" + archive + "]: " + e);
         }
-
-        List<String> names = new ArrayList<String>();
-        while (entries.hasMoreElements()) {
-            names.add(entries.nextElement().getName());
-        }
-        return names;
     }
-
 
 }

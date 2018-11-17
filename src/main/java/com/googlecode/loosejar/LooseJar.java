@@ -27,7 +27,7 @@ import java.lang.instrument.Instrumentation;
 public class LooseJar implements LooseJarMBean {
     private final Instrumentation instrumentation;
 
-    public LooseJar(Instrumentation instrumentation) {
+    LooseJar(Instrumentation instrumentation) {
         this.instrumentation = instrumentation;
     }
 

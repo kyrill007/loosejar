@@ -25,5 +25,6 @@ public interface LooseJarMBean {
     /**
      * Displays the main analysis summary.
      */
+    @SuppressWarnings("unused")
     String summary();
 }

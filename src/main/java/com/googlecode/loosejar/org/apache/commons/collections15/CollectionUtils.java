@@ -63,8 +63,8 @@ public final class CollectionUtils {
      */
     public static <E> Collection<E> intersection(final Collection<? extends E> a, final Collection<? extends E> b) {
         List<E> list = new ArrayList<E>();
-        Map mapa = getCardinalityMap(a);
-        Map mapb = getCardinalityMap(b);
+        Map<? extends E, Integer> mapa = getCardinalityMap(a);
+        Map<? extends E, Integer> mapb = getCardinalityMap(b);
         Set<E> elts = new HashSet<E>(a);
         elts.addAll(b);
         for (E elt : elts) {
@@ -85,7 +85,7 @@ public final class CollectionUtils {
      * @param iterable the collection to get the cardinality map for, must not be null
      * @return the populated cardinality map
      */
-    public static <E> Map<E, Integer> getCardinalityMap(final Iterable<E> iterable) {
+    private static <E> Map<E, Integer> getCardinalityMap(final Iterable<E> iterable) {
         Map<E, Integer> count = new HashMap<E, Integer>();
         for (E obj : iterable) {
             Integer c = count.get(obj);
@@ -97,7 +97,6 @@ public final class CollectionUtils {
         }
         return count;
     }
-
 
     private static int getFreq(final Object obj, final Map freqMap) {
         Integer count = (Integer) freqMap.get(obj);

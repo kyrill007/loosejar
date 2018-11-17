@@ -8,13 +8,23 @@ import com.googlecode.loosejar.JarArchive;
 
 public class CSVFormatSummarizer implements Summarizer {
 
-    private StringBuilder builder = null;
+    public String summarize(Map<ClassLoader, List<String>> classLoaderToClassListMap) {
+        StringBuilder builder = new StringBuilder();
 
-    public CSVFormatSummarizer() {
-        super();
+        writeHeader(builder);
+
+        //noinspection Duplicates
+        for (ClassLoader ucl : classLoaderToClassListMap.keySet()) {
+            ClassLoaderAnalyzer classLoaderAnalyzer = new ClassLoaderAnalyzer(ucl, classLoaderToClassListMap.get(ucl));
+            classLoaderAnalyzer.analyze();
+            List<JarArchive> jarList = classLoaderAnalyzer.getJars();
+            writeSummaryForClassloader(ucl, jarList, builder);
+        }
+
+        return builder.toString();
     }
 
-    private void writeHeader() {
+    private void writeHeader(StringBuilder builder) {
         builder.append("\"ClassLoader Name\",");
         builder.append("\"Jar\",");
         builder.append("\"Utilization\",");
@@ -23,31 +33,15 @@ public class CSVFormatSummarizer implements Summarizer {
         builder.append("\n");
     }
 
-    private void writeSummaryForJar(ClassLoader classLoader, JarArchive jar) {
+    private void writeSummaryForJar(ClassLoader classLoader, JarArchive jar, StringBuilder builder) {
         builder.append((String.format("\"%s\",\"%s\",\"%.2f%%\",\"%d\",\"%d\"\n", classLoader.getClass().getName(),
                 jar.getJar(), jar.getUsagePercentage(), jar.getNamesOfLoadedClasses().size(),
                 jar.getAllClassNames().size())));
-
     }
 
-    public String summarize(Map<ClassLoader, List<String>> classLoaderToClassListMap) {
-        builder = new StringBuilder("");
-        writeHeader();
-        for (ClassLoader ucl : classLoaderToClassListMap.keySet()) {
-            ClassLoaderAnalyzer classLoaderAnalyzer = new ClassLoaderAnalyzer(ucl, classLoaderToClassListMap.get(ucl));
-            classLoaderAnalyzer.analyze();
-            List<JarArchive> jarList = classLoaderAnalyzer.getJars();
-            writeSummaryForClassloader(ucl, jarList);
-        }
-
-        return builder.toString();
-
-    }
-
-    private void writeSummaryForClassloader(ClassLoader classLoader, List<JarArchive> jarList) {
+    private void writeSummaryForClassloader(ClassLoader classLoader, List<JarArchive> jarList, StringBuilder builder) {
         for (JarArchive jarArchive : jarList) {
-            writeSummaryForJar(classLoader, jarArchive);
+            writeSummaryForJar(classLoader, jarArchive, builder);
         }
-
     }
 }

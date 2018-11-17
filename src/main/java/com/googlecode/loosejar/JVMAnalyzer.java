@@ -40,7 +40,7 @@ import static com.googlecode.loosejar.Logger.*;
 public class JVMAnalyzer implements Runnable {
     private final Instrumentation instrumentation;
 
-    public JVMAnalyzer(Instrumentation instr) {
+    JVMAnalyzer(Instrumentation instr) {
         this.instrumentation = instr;
     }
 
@@ -55,7 +55,7 @@ public class JVMAnalyzer implements Runnable {
      * Performs <em>all</em> application logic returning the results of the
      * analysis.
      */
-    public void displayResults() {
+    void displayResults() {
         String outputFile = System.getProperty("loosejar.outputFile");
         String results = getResults();
         if (outputFile == null || outputFile.equals("")) {
@@ -63,7 +63,6 @@ public class JVMAnalyzer implements Runnable {
         } else {
             writeToFile(outputFile, results);
         }
-
     }
 
     private Map<ClassLoader, List<String>> createClassLoaderMap() {
@@ -92,7 +91,7 @@ public class JVMAnalyzer implements Runnable {
         return map;
     }
 
-    public String getResults() {
+    String getResults() {
         SummarizerFactory factory = new SummarizerFactory();
         Summarizer summarizer = factory.getSummarizer();
         return summarizer.summarize(createClassLoaderMap());
@@ -103,18 +102,16 @@ public class JVMAnalyzer implements Runnable {
     }
 
     private void writeToFile(String outputFile, String results) {
-        PrintStream fileStream = null;
         try {
-            fileStream = new PrintStream(outputFile);
-            fileStream.println(results);
-
+            PrintStream fileStream = new PrintStream(outputFile);
+            try {
+                fileStream.println(results);
+            } finally {
+                fileStream.close();
+            }
         } catch (IOException ioe) {
             log(String.format("Exception creating outputFile - %s, writing to default output console", outputFile));
             writeToConsole(results);
-        } finally {
-            if (fileStream != null) {
-                fileStream.close();
-            }
         }
     }
 }
