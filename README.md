@@ -19,8 +19,8 @@ loosejar can be configured using java system properties. Following are the confi
 
 Releases
 --------
-loosejar **1.0.1** has been released!
-loosejar **1.2.0** has been released. It includes support for Java 9+ versions.
+1. loosejar **1.0.1** has been released!
+2. loosejar **1.2.0** has been released. It includes support for Java 9+ versions.
 
 Mentions
 --------
