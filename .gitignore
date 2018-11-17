@@ -25,6 +25,5 @@ work/
 *~
 *.class
 *.hprof
-*.iml
 user.properties
 
